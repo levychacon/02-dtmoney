@@ -1,38 +1,76 @@
-import { Container } from "./styles"
-import incomeImage from '../../assets/income.svg';
-import outcomeImage from '../../assets/outcome.svg';
-import totalImage from '../../assets/total.svg'
-import { useContext } from "react";
-import { TransactionsContext } from "../../TransactionsContext";
+import { Container } from "./styles";
+import incomeImage from "../../assets/income.svg";
+import outcomeImage from "../../assets/outcome.svg";
+import totalImage from "../../assets/total.svg";
 
-export const Summary=()=>{
-    const {transactions} = useContext(TransactionsContext);
-    return(
-        <Container>
-            <div>
-                <header>
-                    <p>Entradas</p>
-                    <img src={incomeImage} alt='income'></img>
-                </header>
-                <strong>1000</strong>
-            </div>
+import { useTransactions } from "../../hooks/useTransactions";
 
-            <div>
-                <header>
-                    <p>Saídas</p>
-                    <img src={outcomeImage} alt='outcome'></img>
-                </header>
-                <strong>-500</strong>
-            </div>
+export const Summary = () => {
+  const { transactions } = useTransactions();
 
-            <div className="highlight-background">
-                <header>
-                    <p>Total</p>
-                    <img src={totalImage} alt='total'></img>
-                </header>
-                <strong>500</strong>
-            </div>
+  const summary = transactions.reduce(
+    (acc, transaction) => {
+      if (transaction.type === "deposit") {
+        acc.deposits += transaction.amount;
+        acc.total += transaction.amount;
+      } else {
+        acc.withdraws += transaction.amount;
+        acc.total -= transaction.amount;
+      }
+      return acc;
+    },
+    {
+      deposits: 0,
+      withdraws: 0,
+      total: 0,
+    }
+  );
 
-        </Container>
-    )
-}
+  const totalBackgroundColor =
+    summary.total >= 0
+      ? "highlight-background-green"
+      : "highlight-background-red";
+
+  return (
+    <Container>
+      <div>
+        <header>
+          <p>Entradas</p>
+          <img src={incomeImage} alt="income"></img>
+        </header>
+        <strong>
+          {new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(summary.deposits)}
+        </strong>
+      </div>
+
+      <div>
+        <header>
+          <p>Saídas</p>
+          <img src={outcomeImage} alt="outcome"></img>
+        </header>
+        <strong>
+          {new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(summary.withdraws)}
+        </strong>
+      </div>
+
+      <div className={totalBackgroundColor}>
+        <header>
+          <p>Total</p>
+          <img src={totalImage} alt="total"></img>
+        </header>
+        <strong>
+          {new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(summary.total)}
+        </strong>
+      </div>
+    </Container>
+  );
+};
